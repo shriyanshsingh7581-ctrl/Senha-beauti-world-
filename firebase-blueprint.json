@@ -1,0 +1,456 @@
+{
+  "entities": {
+    "Admin": {
+      "title": "Admin",
+      "description": "Administrator user record granting elevated management privileges.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified administrator email address.",
+          "minLength": 3,
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when admin record was created."
+        }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "Salon & bridal beauty treatment offering with pricing, inclusions, and Cloudinary image.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Name of the salon service or bridal package.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "category": {
+          "type": "string",
+          "description": "Service category.",
+          "enum": ["Bridal", "Skin", "Hair", "Massage", "Draping"]
+        },
+        "subCategory": {
+          "type": "string",
+          "description": "Specific tier or technique label.",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "price": {
+          "type": "number",
+          "description": "Service price in INR."
+        },
+        "originalPrice": {
+          "type": "number",
+          "description": "Comparison or regular price in INR."
+        },
+        "duration": {
+          "type": "string",
+          "description": "Estimated session duration (e.g., 90 mins, 3.5 hrs).",
+          "minLength": 2,
+          "maxLength": 40
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the treatment and products used.",
+          "minLength": 10,
+          "maxLength": 600
+        },
+        "inclusions": {
+          "type": "array",
+          "description": "Up to 8 included steps or items in the package."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Cloudinary or asset image URL or identifier.",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the service is currently available for booking."
+        },
+        "isFeatured": {
+          "type": "boolean",
+          "description": "Whether the service is highlighted as a signature offering."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "title",
+        "category",
+        "subCategory",
+        "price",
+        "originalPrice",
+        "duration",
+        "description",
+        "inclusions",
+        "imageUrl",
+        "isActive",
+        "isFeatured",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "GalleryItem": {
+      "title": "GalleryItem",
+      "description": "High-resolution bridal transformation or salon portfolio item.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Look title or bride showcase name.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "category": {
+          "type": "string",
+          "description": "Portfolio tag.",
+          "enum": ["Bridal", "Hair", "Skin", "Draping"]
+        },
+        "clientName": {
+          "type": "string",
+          "description": "Featured bride or client name.",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "description": {
+          "type": "string",
+          "description": "Transformation notes and products used.",
+          "minLength": 5,
+          "maxLength": 400
+        },
+        "beforeLabel": {
+          "type": "string",
+          "description": "Before transformation state description.",
+          "minLength": 2,
+          "maxLength": 160
+        },
+        "afterLabel": {
+          "type": "string",
+          "description": "After transformation result description.",
+          "minLength": 2,
+          "maxLength": 160
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Primary high-res image URL from Cloudinary or asset.",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "instagramUrl": {
+          "type": "string",
+          "description": "Link to the Instagram reel or post.",
+          "minLength": 5,
+          "maxLength": 300
+        },
+        "isPublished": {
+          "type": "boolean",
+          "description": "Whether visible in public gallery."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "title",
+        "category",
+        "clientName",
+        "description",
+        "beforeLabel",
+        "afterLabel",
+        "imageUrl",
+        "instagramUrl",
+        "isPublished",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Client salon or bridal booking request.",
+      "type": "object",
+      "properties": {
+        "clientUid": {
+          "type": "string",
+          "description": "Authenticated user UID of the creator.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "clientName": {
+          "type": "string",
+          "description": "Full name of the client.",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "clientPhone": {
+          "type": "string",
+          "description": "Client phone number for call/WhatsApp confirmation.",
+          "minLength": 7,
+          "maxLength": 25
+        },
+        "serviceId": {
+          "type": "string",
+          "description": "ID of the booked service.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "serviceTitle": {
+          "type": "string",
+          "description": "Snapshot title of the booked service.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "servicePrice": {
+          "type": "number",
+          "description": "Snapshot price of the booked service in INR."
+        },
+        "appointmentDate": {
+          "type": "string",
+          "description": "Requested date in YYYY-MM-DD format.",
+          "minLength": 8,
+          "maxLength": 20
+        },
+        "timeSlot": {
+          "type": "string",
+          "description": "Requested time slot (e.g., 11:00 AM).",
+          "minLength": 3,
+          "maxLength": 30
+        },
+        "notes": {
+          "type": "string",
+          "description": "Special requests, bridal venue details, or skin concerns.",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "status": {
+          "type": "string",
+          "description": "Current booking lifecycle status.",
+          "enum": ["Pending", "Confirmed", "Completed", "Cancelled"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "clientUid",
+        "clientName",
+        "clientPhone",
+        "serviceId",
+        "serviceTitle",
+        "servicePrice",
+        "appointmentDate",
+        "timeSlot",
+        "notes",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Inquiry": {
+      "title": "Inquiry",
+      "description": "General bridal consultation or custom package inquiry.",
+      "type": "object",
+      "properties": {
+        "clientUid": {
+          "type": "string",
+          "description": "Authenticated user UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Sender full name.",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "phone": {
+          "type": "string",
+          "description": "Sender phone number.",
+          "minLength": 7,
+          "maxLength": 25
+        },
+        "message": {
+          "type": "string",
+          "description": "Inquiry message content.",
+          "minLength": 5,
+          "maxLength": 600
+        },
+        "status": {
+          "type": "string",
+          "description": "Inquiry resolution state.",
+          "enum": ["New", "Replied", "Archived"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "clientUid",
+        "name",
+        "phone",
+        "message",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "Global dynamic configuration for Sneha Beauty World.",
+      "type": "object",
+      "properties": {
+        "brandName": {
+          "type": "string",
+          "description": "Display brand name.",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "tagline": {
+          "type": "string",
+          "description": "Brand tagline.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "phone": {
+          "type": "string",
+          "description": "Primary phone number.",
+          "minLength": 7,
+          "maxLength": 30
+        },
+        "whatsappNumber": {
+          "type": "string",
+          "description": "Clean digits for WhatsApp click-to-chat.",
+          "minLength": 7,
+          "maxLength": 25
+        },
+        "instagramHandle": {
+          "type": "string",
+          "description": "Instagram handle.",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "instagramUrl": {
+          "type": "string",
+          "description": "Full Instagram profile URL.",
+          "minLength": 5,
+          "maxLength": 250
+        },
+        "openingHours": {
+          "type": "string",
+          "description": "Formatted salon operating hours.",
+          "minLength": 5,
+          "maxLength": 160
+        },
+        "address": {
+          "type": "string",
+          "description": "Studio physical address.",
+          "minLength": 5,
+          "maxLength": 250
+        },
+        "announcementText": {
+          "type": "string",
+          "description": "Top promotional banner text.",
+          "minLength": 2,
+          "maxLength": 200
+        },
+        "cloudinaryCloudName": {
+          "type": "string",
+          "description": "Cloudinary cloud name for image uploads.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "cloudinaryUploadPreset": {
+          "type": "string",
+          "description": "Cloudinary unsigned upload preset.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last updated server timestamp."
+        }
+      },
+      "required": [
+        "brandName",
+        "tagline",
+        "phone",
+        "whatsappNumber",
+        "instagramHandle",
+        "instagramUrl",
+        "openingHours",
+        "address",
+        "announcementText",
+        "cloudinaryCloudName",
+        "cloudinaryUploadPreset",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/admins/{adminUid}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Administrator registry."
+    },
+    "/services/{serviceId}": {
+      "schema": { "$ref": "#/entities/Service" },
+      "description": "Salon & bridal service catalog."
+    },
+    "/gallery/{itemId}": {
+      "schema": { "$ref": "#/entities/GalleryItem" },
+      "description": "Bridal transformations and beauty portfolio gallery."
+    },
+    "/appointments/{appointmentId}": {
+      "schema": { "$ref": "#/entities/Appointment" },
+      "description": "Client appointment bookings containing PII."
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": { "$ref": "#/entities/Inquiry" },
+      "description": "Client custom bridal or salon inquiries containing PII."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/SiteSettings" },
+      "description": "Global salon configuration and announcement settings."
+    }
+  }
+}

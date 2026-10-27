@@ -1,0 +1,6 @@
+{
+  "name": "Sneha Beauty World — Make Beauty Yours",
+  "description": "Ultra-luxury bridal makeup, aesthetics, skin glow therapy, hair treatments, spa & saree draping studio. Book appointments online.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

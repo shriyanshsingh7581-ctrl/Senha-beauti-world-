@@ -1,0 +1,310 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 0. Global Default-Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 1. Hardened Global Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    // Token-only admin check (safe for list queries with zero DB reads)
+    function isVerifiedAdminEmail() {
+      return isVerifiedUser() && request.auth.token.email == 'singhshriyansh51@gmail.com';
+    }
+
+    // Full admin check for single-document operations
+    function isAdmin() {
+      return isVerifiedAdminEmail() || (isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    // 2. Entity Validation Blueprints (Strict Keys, Types, and Volumetric Bounds)
+    function isValidAdmin(data) {
+      return data.keys().hasAll(['email', 'createdAt'])
+        && data.keys().hasOnly(['email', 'createdAt'])
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 120
+        && data.createdAt is timestamp;
+    }
+
+    function isValidService(data) {
+      return data.keys().hasAll([
+          'title', 'category', 'subCategory', 'price', 'originalPrice',
+          'duration', 'description', 'inclusions', 'imageUrl',
+          'isActive', 'isFeatured', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'title', 'category', 'subCategory', 'price', 'originalPrice',
+          'duration', 'description', 'inclusions', 'imageUrl',
+          'isActive', 'isFeatured', 'createdAt', 'updatedAt'
+        ])
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 120
+        && data.category is string && data.category.size() <= 30 && data.category in ['Bridal', 'Skin', 'Hair', 'Massage', 'Draping']
+        && data.subCategory is string && data.subCategory.size() >= 2 && data.subCategory.size() <= 80
+        && data.price is number && data.price >= 0 && data.price <= 500000
+        && data.originalPrice is number && data.originalPrice >= 0 && data.originalPrice <= 500000
+        && data.duration is string && data.duration.size() >= 2 && data.duration.size() <= 40
+        && data.description is string && data.description.size() >= 10 && data.description.size() <= 600
+        && data.inclusions is list && data.inclusions.size() >= 1 && data.inclusions.size() <= 8
+        && data.inclusions[0] is string && data.inclusions[0].size() >= 2 && data.inclusions[0].size() <= 120
+        && data.imageUrl is string && data.imageUrl.size() >= 1 && data.imageUrl.size() <= 500
+        && data.isActive is bool
+        && data.isFeatured is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidGalleryItem(data) {
+      return data.keys().hasAll([
+          'title', 'category', 'clientName', 'description',
+          'beforeLabel', 'afterLabel', 'imageUrl', 'instagramUrl',
+          'isPublished', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'title', 'category', 'clientName', 'description',
+          'beforeLabel', 'afterLabel', 'imageUrl', 'instagramUrl',
+          'isPublished', 'createdAt', 'updatedAt'
+        ])
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 120
+        && data.category is string && data.category.size() <= 30 && data.category in ['Bridal', 'Hair', 'Skin', 'Draping']
+        && data.clientName is string && data.clientName.size() >= 2 && data.clientName.size() <= 80
+        && data.description is string && data.description.size() >= 5 && data.description.size() <= 400
+        && data.beforeLabel is string && data.beforeLabel.size() >= 2 && data.beforeLabel.size() <= 160
+        && data.afterLabel is string && data.afterLabel.size() >= 2 && data.afterLabel.size() <= 160
+        && data.imageUrl is string && data.imageUrl.size() >= 1 && data.imageUrl.size() <= 500
+        && data.instagramUrl is string && data.instagramUrl.size() >= 5 && data.instagramUrl.size() <= 300
+        && data.isPublished is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAppointment(data) {
+      return data.keys().hasAll([
+          'clientUid', 'clientName', 'clientPhone', 'serviceId',
+          'serviceTitle', 'servicePrice', 'appointmentDate', 'timeSlot',
+          'notes', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'clientUid', 'clientName', 'clientPhone', 'serviceId',
+          'serviceTitle', 'servicePrice', 'appointmentDate', 'timeSlot',
+          'notes', 'status', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.clientUid)
+        && data.clientName is string && data.clientName.size() >= 2 && data.clientName.size() <= 100
+        && data.clientPhone is string && data.clientPhone.size() >= 7 && data.clientPhone.size() <= 25
+        && isValidId(data.serviceId)
+        && data.serviceTitle is string && data.serviceTitle.size() >= 2 && data.serviceTitle.size() <= 120
+        && data.servicePrice is number && data.servicePrice >= 0 && data.servicePrice <= 500000
+        && data.appointmentDate is string && data.appointmentDate.size() >= 8 && data.appointmentDate.size() <= 20
+        && data.timeSlot is string && data.timeSlot.size() >= 3 && data.timeSlot.size() <= 30
+        && data.notes is string && data.notes.size() >= 0 && data.notes.size() <= 500
+        && data.status is string && data.status.size() <= 20 && data.status in ['Pending', 'Confirmed', 'Completed', 'Cancelled']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidInquiry(data) {
+      return data.keys().hasAll([
+          'clientUid', 'name', 'phone', 'message', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'clientUid', 'name', 'phone', 'message', 'status', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.clientUid)
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+        && data.phone is string && data.phone.size() >= 7 && data.phone.size() <= 25
+        && data.message is string && data.message.size() >= 5 && data.message.size() <= 600
+        && data.status is string && data.status.size() <= 20 && data.status in ['New', 'Replied', 'Archived']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSiteSettings(data) {
+      return data.keys().hasAll([
+          'brandName', 'tagline', 'phone', 'whatsappNumber',
+          'instagramHandle', 'instagramUrl', 'openingHours', 'address',
+          'announcementText', 'cloudinaryCloudName', 'cloudinaryUploadPreset', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'brandName', 'tagline', 'phone', 'whatsappNumber',
+          'instagramHandle', 'instagramUrl', 'openingHours', 'address',
+          'announcementText', 'cloudinaryCloudName', 'cloudinaryUploadPreset', 'updatedAt'
+        ])
+        && data.brandName is string && data.brandName.size() >= 2 && data.brandName.size() <= 80
+        && data.tagline is string && data.tagline.size() >= 2 && data.tagline.size() <= 120
+        && data.phone is string && data.phone.size() >= 7 && data.phone.size() <= 30
+        && data.whatsappNumber is string && data.whatsappNumber.size() >= 7 && data.whatsappNumber.size() <= 25
+        && data.instagramHandle is string && data.instagramHandle.size() >= 2 && data.instagramHandle.size() <= 60
+        && data.instagramUrl is string && data.instagramUrl.size() >= 5 && data.instagramUrl.size() <= 250
+        && data.openingHours is string && data.openingHours.size() >= 5 && data.openingHours.size() <= 160
+        && data.address is string && data.address.size() >= 5 && data.address.size() <= 250
+        && data.announcementText is string && data.announcementText.size() >= 2 && data.announcementText.size() <= 200
+        && data.cloudinaryCloudName is string && data.cloudinaryCloudName.size() >= 1 && data.cloudinaryCloudName.size() <= 80
+        && data.cloudinaryUploadPreset is string && data.cloudinaryUploadPreset.size() >= 1 && data.cloudinaryUploadPreset.size() <= 80
+        && data.updatedAt is timestamp;
+    }
+
+    // 3. Collection Rules
+    match /admins/{adminUid} {
+      allow get: if isSignedIn() && isValidId(adminUid) && (request.auth.uid == adminUid || isAdmin());
+      allow list: if false;
+      allow create: if isVerifiedAdminEmail() && isValidId(adminUid) && isValidAdmin(incoming()) && incoming().createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /services/{serviceId} {
+      allow get: if isValidId(serviceId) && (existing().isActive == true || isAdmin());
+      allow list: if existing().isActive == true || isVerifiedAdminEmail();
+      allow create: if isVerifiedUser() && isValidId(serviceId) && isValidService(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && isAdmin();
+      allow update: if isVerifiedUser() && isValidId(serviceId) && isValidService(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && isAdmin()
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['isActive', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'category', 'subCategory', 'price', 'originalPrice',
+            'duration', 'description', 'inclusions', 'imageUrl',
+            'isActive', 'isFeatured', 'updatedAt'
+          ])
+        );
+      allow delete: if isVerifiedUser() && isValidId(serviceId) && isAdmin();
+    }
+
+    match /gallery/{itemId} {
+      allow get: if isValidId(itemId) && (existing().isPublished == true || isAdmin());
+      allow list: if existing().isPublished == true || isVerifiedAdminEmail();
+      allow create: if isVerifiedUser() && isValidId(itemId) && isValidGalleryItem(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && isAdmin();
+      allow update: if isVerifiedUser() && isValidId(itemId) && isValidGalleryItem(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && isAdmin()
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['isPublished', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'category', 'clientName', 'description',
+            'beforeLabel', 'afterLabel', 'imageUrl', 'instagramUrl',
+            'isPublished', 'updatedAt'
+          ])
+        );
+      allow delete: if isVerifiedUser() && isValidId(itemId) && isAdmin();
+    }
+
+    match /appointments/{appointmentId} {
+      // PII Isolation: Only the booking owner or Admin can read
+      allow get: if isSignedIn() && isValidId(appointmentId) && (existing().clientUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().clientUid == request.auth.uid || isVerifiedAdminEmail());
+
+      // Create: Request Auth -> Static Validation -> Relational Validation
+      allow create: if isVerifiedUser()
+        && isValidId(appointmentId)
+        && isValidAppointment(incoming())
+        && incoming().clientUid == request.auth.uid
+        && incoming().status == 'Pending'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/services/$(incoming().serviceId));
+
+      // Action-Based Update with Terminal State Locking & Immortal Fields
+      allow update: if isVerifiedUser()
+        && isValidId(appointmentId)
+        && isValidAppointment(incoming())
+        && incoming().clientUid == existing().clientUid
+        && incoming().serviceId == existing().serviceId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action 1: Client cancels their own Pending appointment
+          (
+            existing().clientUid == request.auth.uid
+            && existing().status == 'Pending'
+            && incoming().status == 'Cancelled'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          ) ||
+          // Action 2: Client updates notes/date/time on their own Pending appointment
+          (
+            existing().clientUid == request.auth.uid
+            && existing().status == 'Pending'
+            && incoming().status == 'Pending'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['appointmentDate', 'timeSlot', 'notes', 'updatedAt'])
+          ) ||
+          // Action 3: Admin updates appointment status or scheduling
+          (
+            isAdmin()
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'appointmentDate', 'timeSlot', 'notes', 'updatedAt'])
+          )
+        );
+
+      allow delete: if isVerifiedUser() && isValidId(appointmentId) && isAdmin();
+    }
+
+    match /inquiries/{inquiryId} {
+      // PII Isolation: Only the sender or Admin can read
+      allow get: if isSignedIn() && isValidId(inquiryId) && (existing().clientUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().clientUid == request.auth.uid || isVerifiedAdminEmail());
+
+      allow create: if isVerifiedUser()
+        && isValidId(inquiryId)
+        && isValidInquiry(incoming())
+        && incoming().clientUid == request.auth.uid
+        && incoming().status == 'New'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser()
+        && isValidId(inquiryId)
+        && isValidInquiry(incoming())
+        && incoming().clientUid == existing().clientUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (existing().status != 'Archived' || isAdmin())
+        && isAdmin()
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+
+      allow delete: if isVerifiedUser() && isValidId(inquiryId) && isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if false;
+      allow create: if isVerifiedUser() && isValidId(settingId) && isValidSiteSettings(incoming())
+        && incoming().updatedAt == request.time
+        && isAdmin();
+      allow update: if isVerifiedUser() && isValidId(settingId) && isValidSiteSettings(incoming())
+        && incoming().updatedAt == request.time
+        && isAdmin()
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'brandName', 'tagline', 'phone', 'whatsappNumber',
+          'instagramHandle', 'instagramUrl', 'openingHours', 'address',
+          'announcementText', 'cloudinaryCloudName', 'cloudinaryUploadPreset', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+  }
+}
